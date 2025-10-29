@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
     <meta charset="utf-8">
-    <title>Places In Japan I Wish To Visit</title>
+    <title>Places In Japan I Have Been To</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
     <!-- Mapbox -->
@@ -59,14 +59,14 @@
 <body>
     <main id="container">
         <div id="side-panel">
-            <h2>List to Visit</h2>
-            <button>Sort by Letter</button>
+            <h2>List of Visited Places</h2>
+            <button>Sort by Rating</button>
 
             <table>
                 <tr>
-                    <th>City</th>
-                    <th>Letter</th>
-                    <th>timestamp</th>
+                    <th>Rating</th>
+                    <th>Location</th>
+                    <th>Year Visited</th>
                 </tr>
             </table>
         </div>
@@ -78,28 +78,28 @@
         
         let map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/satellite-v9',
+            style: 'mapbox://styles/mapbox/streets-v12',
             zoom: 5.5,
             center: [138, 38]
         });
         
         async function geojsonFetch() {
-            let response, earthquakes, japan;
-            response = await fetch('asset/tovisit.geojson');
-            earthquakes = await response.json();
+            let response, visited, japan;
+            response = await fetch('asset/visited.geojson');
+            visited = await response.json();
             response = await fetch('asset/japan.json');
             japan = await response.json();
             map.on('load', function () {
         
-                map.addSource('earthquakes', {
+                map.addSource('visited', {
                     type: 'geojson',
-                    data: earthquakes
+                    data: visited
                 });
         
                 map.addLayer({
-                    'id': 'earthquakes-layer',
+                    'id': 'visited-layer',
                     'type': 'circle',
-                    'source': 'earthquakes',
+                    'source': 'visited',
                     'paint': {
                         'circle-radius': 8,
                         'circle-stroke-width': 2,
@@ -118,7 +118,7 @@
                     'type': 'fill',
                     'source': 'japan',
                     'paint': {
-                        'fill-color': '#0080ff',
+                        'fill-color': "#00BFFF",
                         'fill-opacity': 0.5
                     }
                 });
@@ -127,31 +127,34 @@
             let table = document.getElementsByTagName("table")[0];
             let row, cell1, cell2, cell3;
         
-            for (let i = 0; i < earthquakes.features.length; i++) {
+            for (let i = 0; i < visited.features.length; i++) {
                 row = table.insertRow(-1);
                 cell1 = row.insertCell(0);
                 cell2 = row.insertCell(1);
                 cell3 = row.insertCell(2);
-                cell1.innerHTML = earthquakes.features[i].properties.id;
-                cell2.innerHTML = earthquakes.features[i].properties.mag;
-                cell3.innerHTML = new Date(earthquakes.features[i].properties.time).toLocaleDateString("en-US");
+                cell1.innerHTML = visited.features[i].properties.Rating;
+                cell2.innerHTML = visited.features[i].properties.location;
+                cell3.innerHTML = visited.features[i].properties.year;
             }
         
             let btn = document.getElementsByTagName("button")[0];
             btn.addEventListener('click', sortTable);
         
-            function sortTable(e) {
-                let table, rows, switching, i, x, y, shouldSwitch;
-                table = document.getElementsByTagName("table")[0];
-                switching = true;
+            function sortTable() {
+                let table = document.getElementsByTagName("table")[0];
+                let switching = true;
+                let shouldSwitch, rows, x, y, i;
+
                 while (switching) {
                     switching = false;
                     rows = table.rows;
+
                     for (i = 1; i < (rows.length - 1); i++) {
                         shouldSwitch = false;
-                        x = parseFloat(rows[i].getElementsByTagName("td")[1].innerHTML);
-                        y = parseFloat(rows[i + 1].getElementsByTagName("td")[1].innerHTML);
-                        if (x < y) {
+                        // Compare Rating column (index 0)
+                        x = parseFloat(rows[i].getElementsByTagName("td")[0].innerHTML);
+                        y = parseFloat(rows[i + 1].getElementsByTagName("td")[0].innerHTML);
+                        if (x < y) { // descending order
                             shouldSwitch = true;
                             break;
                         }
@@ -162,6 +165,7 @@
                     }
                 }
             }
+
         }
         
         geojsonFetch();
